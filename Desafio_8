@@ -1,0 +1,157 @@
+using System;
+using System.Collections.Generic;
+
+namespace ContadorFrequenciaSimples
+{
+    class Program
+    {
+        static List<string[]> historicoTextos = new List<string[]>();
+        
+        static Dictionary<string, int> dicionarioAtual = new Dictionary<string, int>();
+        static int totalPalavrasAtual = 0;
+
+        static void Main(string[] args)
+        {
+            string opcao = "";
+
+            ProcessarNovoTexto();
+
+            while (opcao != "4")
+            {
+                Console.WriteLine("\nMenu: 1) novo texto  2) buscar palavra  3) comparar textos  4) sair");
+                Console.Write("> _");
+                opcao = Console.ReadLine();
+
+                if (opcao == "1")
+                {
+                    ProcessarNovoTexto();
+                }
+                else if (opcao == "2")
+                {
+                    BuscarPalavra();
+                }
+                else if (opcao == "3")
+                {
+                    CompararTextos();
+                }
+                else if (opcao == "4")
+                {
+                    Console.WriteLine("Tchau!");
+                }
+                else
+                {
+                    Console.WriteLine("Opcao invalida!");
+                }
+            }
+        }
+        static void ProcessarNovoTexto()
+        {
+            dicionarioAtual.Clear();
+            totalPalavrasAtual = 0;
+
+            Console.WriteLine("\nDigite o texto (linha vazia para encerrar):");
+            string textoCompleto = "";
+            string linha = Console.ReadLine();
+            while (linha != "")
+            {
+                textoCompleto += " " + linha;
+                linha = Console.ReadLine();
+            }
+
+            textoCompleto = textoCompleto.ToLower();
+            textoCompleto = textoCompleto.Replace(".", " ");
+            textoCompleto = textoCompleto.Replace(",", " ");
+            textoCompleto = textoCompleto.Replace("!", " ");
+            textoCompleto = textoCompleto.Replace("?", " ");
+            textoCompleto = textoCompleto.Replace(":", " ");
+            textoCompleto = textoCompleto.Replace(";", " ");
+
+            string[] palavras = textoCompleto.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            totalPalavrasAtual = palavras.Length;
+
+            historicoTextos.Add(palavras);
+
+            for (int i = 0; i < palavras.Length; i++)
+            {
+                string pal = palavras[i];
+
+                if (dicionarioAtual.ContainsKey(pal))
+                {
+                    dicionarioAtual[pal] = dicionarioAtual[pal] + 1;
+                }
+                else
+                {
+                    dicionarioAtual[pal] = 1;
+                }
+            }
+
+            Console.WriteLine("\n=== Resultado ===");
+            Console.WriteLine("Total de palavras: " + totalPalavrasAtual);
+            Console.WriteLine("Palavras distintas: " + dicionarioAtual.Count);
+            Console.WriteLine("\nPalavras encontradas e suas frequencias:");
+
+            int contadorExibicao = 1;
+            foreach (KeyValuePair<string, int> par in dicionarioAtual)
+            {
+                if (contadorExibicao > 10) break; 
+
+                string termo = par.Value == 1 ? "ocorrencia" : "ocorrencias";
+                Console.WriteLine("  " + contadorExibicao + ". \"" + par.Key + "\" - " + par.Value + " " + termo);
+                contadorExibicao++;
+            }
+        }
+
+        static void BuscarPalavra()
+        {
+            Console.Write("Qual palavra? ");
+            string busca = Console.ReadLine().Trim().ToLower();
+
+            if (dicionarioAtual.ContainsKey(busca))
+            {
+                int quantidade = dicionarioAtual[busca];
+                Console.WriteLine("\"" + busca + "\" aparece " + quantidade + " vezes.");
+            }
+            else
+            {
+                Console.WriteLine("\"" + busca + "\" aparece 0 vezes.");
+            }
+        }
+        static void CompararTextos()
+        {
+            if (historicoTextos.Count < 2)
+            {
+                Console.WriteLine("Digite pelo menos 2 textos no menu 1 antes de comparar!");
+                return;
+            }
+
+            Console.WriteLine("\nTextos disponiveis de 0 a " + (historicoTextos.Count - 1));
+            Console.Write("Escolha o primeiro texto (indice): ");
+            int t1 = int.Parse(Console.ReadLine());
+
+            Console.Write("Escolha o segundo texto (indice): ");
+            int t2 = int.Parse(Console.ReadLine());
+
+            string[] texto1 = historicoTextos[t1];
+            string[] texto2 = historicoTextos[t2];
+
+            Console.WriteLine("\n=== Palavras em comum entre os dois textos ===");
+
+            List<string> exibidas = new List<string>();
+
+            for (int i = 0; i < texto1.Length; i++)
+            {
+                for (int j = 0; j < texto2.Length; j++)
+                {
+                    if (texto1[i] == texto2[j])
+                    {
+                        if (!exibidas.Contains(texto1[i]))
+                        {
+                            Console.WriteLine(" -> " + texto1[i]);
+                            exibidas.Add(texto1[i]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
