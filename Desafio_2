@@ -1,0 +1,160 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct no {
+    int info;
+    struct no * prox;
+} No;
+
+typedef No * Celula;
+
+typedef struct lista {
+    Celula inicio;
+    Celula fim;
+} Lista;
+
+typedef Lista * ListaLigada;
+
+ListaLigada novaLista() {
+    ListaLigada l = malloc(sizeof(Lista));
+    if (!l) return NULL;
+    l->inicio = NULL;
+    l->fim = NULL;
+    return l;
+}
+
+Celula novaCelula(int info) {
+    Celula celula = (Celula) malloc(sizeof(No));
+    celula->info = info;
+    celula->prox = NULL;
+    return celula;
+}
+
+void llPrint(ListaLigada lista) {
+    if (lista == NULL || lista->inicio == NULL) {
+        printf("Lista Vazia\n");
+        return;
+    }
+    for (Celula aux = lista->inicio; aux != NULL; aux = aux->prox) {
+        printf("%d", aux->info);
+        if (aux->prox != NULL)
+            printf(" -> ");
+    }
+    printf("\n");
+}
+
+Celula llBusca(ListaLigada lista, int info) {
+    for (Celula aux = lista->inicio; aux != NULL; aux = aux->prox) {
+        if (aux->info == info) return aux;
+    }
+    return NULL;
+}
+
+void llInsereNoInicio(ListaLigada lista, int info) {
+    Celula celula = novaCelula(info);
+    if (lista->inicio == NULL) {
+        lista->inicio = celula;
+        lista->fim = celula;
+    } else {
+        celula->prox = lista->inicio;
+        lista->inicio = celula;
+    }
+}
+
+void llInsereNoFim(ListaLigada lista, int info) {
+    Celula nova = novaCelula(info);
+    if (lista->inicio == NULL) {
+        lista->inicio = nova;
+        lista->fim = nova;
+        return;
+    }
+    lista->fim->prox = nova;
+    lista->fim = nova;
+}
+
+// --- NOVAS FUNÇÕES ADICIONADAS ---
+
+int somaLista(ListaLigada lista) {
+    if (lista == NULL || lista->inicio == NULL) return 0;
+    int soma = 0;
+    for (Celula aux = lista->inicio; aux != NULL; aux = aux->prox) {
+        soma += aux->info;
+    }
+    return soma;
+}
+
+void insereOrdenado(ListaLigada lista, int info) {
+    if (lista == NULL) return;
+
+    if (lista->inicio == NULL || info <= lista->inicio->info) {
+        llInsereNoInicio(lista, info);
+        return;
+    }
+
+    if (info >= lista->fim->info) {
+        llInsereNoFim(lista, info);
+        return;
+    }
+
+    Celula nova = novaCelula(info);
+    Celula aux = lista->inicio;
+
+    while (aux->prox != NULL && aux->prox->info < info) {
+        aux = aux->prox;
+    }
+
+    nova->prox = aux->prox;
+    aux->prox = nova;
+}
+
+void bubbleSort(ListaLigada lista) {
+    if (lista == NULL || lista->inicio == NULL || lista->inicio->prox == NULL) return;
+
+    int trocou;
+    Celula atual;
+    Celula fim_passada = NULL;
+
+    do {
+        trocou = 0;
+        atual = lista->inicio;
+
+        while (atual->prox != fim_passada) {
+            if (atual->info > atual->prox->info) {
+                int temp = atual->info;
+                atual->info = atual->prox->info;
+                atual->prox->info = temp;
+                trocou = 1;
+            }
+            atual = atual->prox;
+        }
+        fim_passada = atual;
+    } while (trocou);
+}
+int main() {
+    ListaLigada listaDesordenada = novaLista();
+    llInsereNoFim(listaDesordenada, 2);
+    llInsereNoFim(listaDesordenada, 5);
+    llInsereNoFim(listaDesordenada, 7);
+    llInsereNoFim(listaDesordenada, 1);
+    
+    printf(" LISTA INICIAL: ");
+    llPrint(listaDesordenada);
+
+    printf(" SOMA: %d\n", somaLista(listaDesordenada));
+
+    printf(" BUBBLE SORT: ");
+    bubbleSort(listaDesordenada);
+    llPrint(listaDesordenada);
+    
+    
+    ListaLigada listaOrdenada = novaLista();
+    llInsereNoFim(listaOrdenada, 1);
+    llInsereNoFim(listaOrdenada, 5);
+    llInsereNoFim(listaOrdenada, 6);
+
+    printf(" INSERINDO O 3: ");
+    insereOrdenado(listaOrdenada, 3);
+    llPrint(listaOrdenada);
+
+    return 0;
+}
