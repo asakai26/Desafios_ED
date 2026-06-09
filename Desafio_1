@@ -1,0 +1,139 @@
+#include <stdio.h>	
+#include <stdlib.h>
+
+typedef struct no{
+    int info;
+    struct no * prox;
+} No;
+
+typedef No * Celula;
+
+typedef struct lista{
+    Celula inicio;
+    Celula fim;
+} Lista;
+
+typedef Lista * ListaLigada;
+
+ListaLigada novaLista(){
+    ListaLigada l = malloc(sizeof(Lista));
+    if(!l){
+        return NULL;
+    }
+    l -> inicio = NULL;
+    l -> fim = NULL;
+    return l;
+}
+
+Celula novaCelula(int info){
+    Celula celula = (Celula) malloc(sizeof(No));
+    celula -> info = info;
+    celula -> prox = NULL;
+    return celula;
+}
+
+void print_lista(ListaLigada lista){
+    if(lista -> inicio == NULL){
+        printf("NULL");
+    }
+    for(Celula aux = lista -> inicio; aux != NULL; aux = aux -> prox){
+        printf("%d", aux ->info);
+        if(aux-> prox != NULL){
+            printf("->");
+        }
+    }
+}
+
+void insere_ini(ListaLigada lista, int info){
+    Celula celula = novaCelula(info);
+    if(lista -> inicio == NULL){
+        lista -> inicio = celula;
+        lista -> fim = celula;
+    }
+    else{
+        celula -> prox = lista -> inicio;
+        lista -> inicio = celula;   
+    }
+}
+void remove_fim(ListaLigada lista) {
+    if (lista == NULL || lista->inicio == NULL) {
+        return;
+    }
+    Celula aux = lista->inicio;
+    if (aux->prox == NULL) {
+        free(aux);
+        lista->inicio = NULL;
+        lista->fim = NULL;
+        return;
+    }
+    while (aux->prox != lista->fim) {
+        aux = aux->prox;
+    }
+    free(lista->fim);
+    lista->fim = aux;
+    lista->fim->prox = NULL;
+}
+
+void remove_value(ListaLigada lista, int value) {
+    if (lista == NULL || lista->inicio == NULL) return;
+    Celula atual = lista->inicio;
+    Celula anterior = NULL;
+    while (atual != NULL && atual->info != value) {
+        anterior = atual;
+        atual = atual->prox;
+    }
+    if (atual == NULL) return;
+    if (anterior == NULL) {
+        lista->inicio = atual->prox;
+        if (lista->inicio == NULL) { 
+            lista->fim = NULL;
+        }
+    } 
+    else {
+        anterior->prox = atual->prox;
+        if (atual == lista->fim) {
+            lista->fim = anterior;
+        }
+    }
+
+    free(atual);
+}
+void reverse_list(ListaLigada lista) {
+    if (lista == NULL || lista->inicio == NULL) return;
+    Celula anterior = NULL;
+    Celula atual = lista->inicio;
+    Celula proximo = NULL;
+    Celula antigo_inicio = lista->inicio;
+
+    while (atual != NULL) {
+        proximo = atual->prox;
+        atual->prox = anterior;
+        anterior = atual;
+        atual = proximo;
+    }
+    lista->fim = antigo_inicio;
+    lista->inicio = anterior;
+}
+int main()
+{
+    ListaLigada listaTeste = novaLista();
+    insere_ini(listaTeste, 6);
+    insere_ini(listaTeste, 9);
+    insere_ini(listaTeste, 8);
+    
+    printf("LISTA INICIAL:");
+    print_lista(listaTeste);
+
+    printf(" LISTA INVERTIDA: ");
+    reverse_list(listaTeste);
+    print_lista(listaTeste); 
+
+    printf(" LISTA COM VALOR 9 REMOVIDO: ");
+    remove_value(listaTeste, 9);
+    print_lista(listaTeste);
+
+    printf(" REMOÇÃO NO FINAL DA LISTA: ");
+    remove_fim(listaTeste);
+    print_lista(listaTeste);
+    return 0;
+}
