@@ -1,0 +1,346 @@
+using System;
+using System.Collections.Generic;
+
+namespace MapaRotasBrasil
+{
+    class Program
+    {
+        static Dictionary<string, List<string>> grafo = new Dictionary<string, List<string>>();
+        static void Main(string[] args)
+        {
+            InicializarMapa();
+
+            Console.WriteLine("=== Bora Viajar! ===");
+            string opcao = "";
+
+            while (opcao != "8")
+            {
+                Console.WriteLine("\nMenu: 1) listar  2) conexão direta  3) existe rota? (DFS)  4) menor rota (BFS)");
+                Console.WriteLine("      5) adicionar conexão  6) grupos isolados  7) cidades próximas  8) sair");
+                Console.Write(" _");
+                opcao = Console.ReadLine();
+
+                switch (opcao)
+                {
+                    case "1":
+                        ListarCidades();
+                        break;
+                    case "2":
+                        VerificarConexaoDireta();
+                        break;
+                    case "3":
+                        ExecutarDFS();
+                        break;
+                    case "4":
+                        ExecutarBFS();
+                        break;
+                    case "5":
+                        AdicionarConexaoUsuario();
+                        break;
+                    case "6":
+                        ExibirGruposIsolados();
+                        break;
+                    case "7":
+                        ExibirCidadesProximas();
+                        break;
+                    case "8":
+                        Console.WriteLine("Boa viagem!");
+                        break;
+                    default:
+                        Console.WriteLine("Opção inválida");
+                        break;
+                }
+            }
+        }
+        static void InicializarMapa()
+        {
+            AdicionarEstrada("São Paulo", "Rio de Janeiro");
+            AdicionarEstrada("São Paulo", "Curitiba");
+            AdicionarEstrada("São Paulo", "Belo Horizonte");
+
+            AdicionarEstrada("Rio de Janeiro", "Belo Horizonte");
+            AdicionarEstrada("Rio de Janeiro", "Vitória");
+
+            AdicionarEstrada("Belo Horizonte", "Brasília");
+
+            AdicionarEstrada("Curitiba", "Florianópolis");
+
+            AdicionarEstrada("Florianópolis", "Porto Alegre");
+
+            AdicionarEstrada("Brasília", "Goiânia");
+
+            AdicionarEstrada("Salvador", "Recife");
+
+            AdicionarEstrada("Recife", "Fortaleza");
+        }
+        static void AdicionarEstrada("string" cidade1, string cidade2)
+        {
+            if (!grafo.ContainsKey(cidade1)) grafo[cidade1] = new List<string>();
+            if (!grafo.ContainsKey(cidade2)) grafo[cidade2] = new List<string>();
+            if (!grafo[cidade1].Contains(cidade2)) grafo[cidade1].Add(cidade2);
+            if (!grafo[cidade2].Contains(palavra => palavra == cidade1)) grafo[cidade2].Add(cidade1);
+        }
+        static void ListarCidades()
+        {
+            Console.WriteLine("\nCidades e conexões:");
+            foreach (KeyValuePair<string, List<string>> par in grafo)
+            {
+                Console.Write("  " + par.Key + ": [");
+                for (int i = 0; i < par.Value.Count; i++)
+                {
+                    Console.Write(par.Value[i]);
+                    if (i < par.Value.Count - 1) Console.Write(", ");
+                }
+                Console.WriteLine("]");
+            }
+        }
+        static void VerificarConexaoDireta()
+        {
+            Console.Write("Cidade 1: ");
+            string c1 = Console.ReadLine();
+            Console.Write("Cidade 2: ");
+            string c2 = Console.ReadLine();
+
+            if (grafo.ContainsKey(c1) && grafo[c1].Contains(c2))
+            {
+                Console.WriteLine(c1 + " e " + c2 + " possuem conexão direta");
+            }
+            else
+            {
+                Console.WriteLine(c1 + " e " + c2 + " não possuem conexão direta.");
+            }
+        }
+        static void ExecutarDFS()
+        {
+            Console.Write("Origem: ");
+            string origem = Console.ReadLine();
+            Console.Write("Destino: ");
+            string destino = Console.ReadLine();
+
+            if (!grafo.ContainsKey(origem) || !grafo.ContainsKey(destino))
+            {
+                Console.WriteLine("Cidade de origem ou destino não existe");
+                return;
+            }
+
+            HashSet<string> visitados = new HashSet<string>();
+            List<string> ordemVisitacao = new List<string>();
+
+            bool encontrado = DFS(origem, destino, visitados, ordemVisitacao);
+            Console.Write("DFS visitando: ");
+            for (int i = 0; i < ordemVisitacao.Count; i++)
+            {
+                Console.Write(ordemVisitacao[i]);
+                if (i < ordemVisitacao.Count - 1) Console.Write(" -> ");
+            }
+            Console.WriteLine();
+
+            if (encontrado)
+                Console.WriteLine("Rota encontrada! É possivel ir de " + origem + " atá " + destino + ".");
+            else
+                Console.WriteLine("Rota não encontrada. Não é possivel ir de " + origem + " até " + destino + ".");
+        }
+
+        static bool DFS(string atual, string destino, HashSet<string> visitados, List<string> ordem)
+        {
+            visitados.Add(atual);
+            ordem.Add(atual);
+
+            if (atual == destino) return true;
+            foreach (string vizinho in grafo[atual])
+            {
+                if (!visitados.Contains(vizinho))
+                {
+                    if (DFS(vizinho, destino, visitados, ordem))
+                        return true;
+                }
+            }
+            return false;
+        }
+        static void ExecutarBFS()
+        {
+            Console.Write("Origem: ");
+            string origem = Console.ReadLine();
+            Console.Write("Destino: ");
+            string destino = Console.ReadLine();
+
+            if (!grafo.ContainsKey(origem) || !grafo.ContainsKey(destino))
+            {
+                Console.WriteLine("Cidades inválidas");
+                return;
+            }
+
+            Queue<string> fila = new Queue<string>();
+            HashSet<string> visitados = new HashSet<string>();
+            Dictionary<string, string> pais = new Dictionary<string, string>();
+
+            fila.Enqueue(origem);
+            visitados.Add(origem);
+            bool alcancou = false;
+
+            while (fila.Count > 0)
+            {
+                string atual = fila.Dequeue();
+
+                if (atual == destino)
+                {
+                    alcancou = true;
+                    break;
+                }
+
+                foreach (string vizinho in grafo[atual])
+                {
+                    if (!visitados.Contains(vizinho))
+                    {
+                        visitados.Add(vizinho);
+                        pais[vizinho] = atual;
+                        fila.Enqueue(vizinho);
+                    }
+                }
+            }
+
+            if (alcancou)
+            {
+                List<string> caminho = new List<string>();
+                string passo = destino;
+
+                while (passo != origem)
+                {
+                    caminho.Add(passo);
+                    passo = pais[passo];
+                }
+                caminho.Add(origem);
+                caminho.Reverse(); 
+
+                Console.Write("Menor rota (BFS): ");
+                for (int i = 0; i < caminho.Count; i++)
+                {
+                    Console.Write(caminho[i]);
+                    if (i < caminho.Count - 1) Console.Write(" -> ");
+                }
+                Console.WriteLine("\nParadas: " + (caminho.Count - 1));
+            }
+            else
+            {
+                Console.WriteLine("Não existe rota entre " + origem + " e " + destino + ".");
+            }
+        }
+        static void AdicionarConexaoUsuario()
+        {
+            Console.Write("Cidade 1: ");
+            string c1 = Console.ReadLine();
+            Console.Write("Cidade 2: ");
+            string c2 = Console.ReadLine();
+
+            AdicionarEstrada(c1, c2);
+            Console.WriteLine("Conexão adicionada com sucesso: " + c1 + " <-> " + c2);
+        }
+        static void ExibirGruposIsolados()
+        {
+            HashSet<string> visitadosGeral = new HashSet<string>();
+            List<List<string>> grupos = new List<List<string>>();
+
+            // Varre cada cidade do grafo geral
+            foreach (string cidade in grafo.Keys)
+            {
+                if (!visitadosGeral.Contains(cidade))
+                {
+                    List<string> componentesDoGrupo = new List<string>();
+                    
+                    CapturarComponentesDFS(cidade, visitadosGeral, componentesDoGrupo);
+                    
+                    grupos.Add(componentesDoGrupo);
+                }
+            }
+
+            Console.WriteLine("\nGrupos de cidades conectadas:");
+            for (int i = 0; i < grupos.Count; i++)
+            {
+                Console.Write("  Grupo " + (i + 1) + ": [");
+                for (int j = 0; j < grupos[i].Count; j++)
+                {
+                    Console.Write(grupos[i][j]);
+                    if (j < grupos[i].Count - 1) Console.Write(", ");
+                }
+                Console.WriteLine("]");
+            }
+
+            if (grupos.Count == 1)
+                Console.WriteLine("Todas as cidades estão conectadas");
+            else
+                Console.WriteLine("Existem " + grupos.Count + " grupos isolados.");
+        }
+
+        static void CapturarComponentesDFS(string atual, HashSet<string> visitados, List<string> grupo)
+        {
+            visitados.Add(atual);
+            grupo.Add(atual);
+
+            foreach (string vizinho in grafo[atual])
+            {
+                if (!visitados.Contains(vizinho))
+                {
+                    CapturarComponentesDFS(vizinho, visitados, grupo);
+                }
+            }
+        }
+        static void ExibirCidadesProximas()
+        {
+            Console.Write("Cidade: ");
+            string inicial = Console.ReadLine();
+
+            if (!grafo.ContainsKey(inicial))
+            {
+                Console.WriteLine("Cidade não cadastrada");
+                return;
+            }
+
+            List<string> nivel1 = new List<string>();
+            List<string> nivel2 = new List<string>();
+            Dictionary<string, int> distancia = new Dictionary<string, int>();
+            Queue<string> fila = new Queue<string>();
+
+            fila.Enqueue(inicial);
+            distancia[inicial] = 0;
+
+            while (fila.Count > 0)
+            {
+                string atual = fila.Dequeue();
+                int distAtual = distancia[atual];
+
+                if (distAtual < 2)
+                {
+                    foreach (string vizinho in grafo[atual])
+                    {
+                        if (!distancia.ContainsKey(vizinho))
+                        {
+                            distancia[vizinho] = distAtual + 1;
+                            fila.Enqueue(vizinho);
+
+                            if (distAtual + 1 == 1) nivel1.Add(vizinho);
+                            if (distAtual + 1 == 2) nivel2.Add(vizinho);
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine("Cidades alcançáveis com até 2 paradas a partir de " + inicial + ":");
+            
+            Console.Write("  1 parada:  [");
+            for (int i = 0; i < nivel1.Count; i++)
+            {
+                Console.Write(nivel1[i]);
+                if (i < nivel1.Count - 1) Console.Write(", ");
+            }
+            Console.WriteLine("]");
+
+            Console.Write("  2 paradas: [");
+            for (int i = 0; i < nivel2.Count; i++)
+            {
+                Console.Write(nivel2[i]);
+                if (i < nivel2.Count - 1) Console.Write(", ");
+            }
+            Console.WriteLine("]");
+        }
+    }
+}
